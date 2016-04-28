@@ -13,7 +13,7 @@ class plugin:
 
 def get_plugins():
 
-	plugins_path = os.path.dirname(os.path.dirname((os.path.realpath(__file__))))+"/plugins/"
+	plugins_path = os.path.dirname(os.path.dirname((os.path.realpath(__file__))))+"/plugins"
 
 	print "[*] loading python plugins from directory", plugins_path
 	
@@ -36,7 +36,6 @@ def get_plugins():
 def run(path, ip ,port, id):
 
 	line = "not empty"
-	plugin_name = os.path.basename(os.path.splitext(path)[0])
 
 	print "[*] launching "+ path
 
@@ -51,4 +50,4 @@ def run(path, ip ,port, id):
 		elif line.startswith('[-]'):
 			print '\033[31m'+line #red
 		elif line.startswith('log'):
-			logger.logEvent(id, ip, port, plugin_name, line[4:])
+			logger.logPluginEvent(id, ip, port, plugin_path, line[4:])

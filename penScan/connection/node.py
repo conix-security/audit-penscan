@@ -8,7 +8,8 @@ class node():
 	def __init__(self, port):
 		self.port = port
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+		self.sock.settimeout(5)
+		
 #------------------------------------------------------------------------------------
 	
 	#SCAN

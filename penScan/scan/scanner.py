@@ -6,6 +6,7 @@ import httplib
 import threading
 import pexpect
 import uuid
+from ..log import logger
 from pexpect import EOF
 
 
@@ -57,6 +58,7 @@ class Scanner():
 						if port in self.triggers[trigger].ports:
 							last_trigger = self.triggers[trigger]
 							print "[+]", last_trigger.name, "detected on", ip+":"+port
+							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
 		except:  
 			return  
@@ -110,7 +112,8 @@ class Scanner():
 													args=(ip_to_check, port_to_check,scan_id))
 							threads.append(t)
 							t.start()
-							
+
+
 						except:
 							break
 					print "[*] ----- Scan Done ----- "

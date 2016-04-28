@@ -11,6 +11,8 @@ def main():
 	try:
 
 		#GET CONFIGS
+
+
 		config = ConfigParser.ConfigParser()
 		config.read("penScan/set.conf")
 
