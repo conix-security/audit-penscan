@@ -24,7 +24,7 @@ def main():
 		if(not node.run_scan_node(ip_sploit)):
 			if (not node.run_scan_node('localhost')):
 				print "[-] no sploit node detected, launching one and trying locally"
-				os.system("/usr/bin/gnome-terminal -e './start.py sploit'")
+				os.system("/usr/bin/gnome-terminal -e './start.py sploit' &")
 				time.sleep(1)
 
 

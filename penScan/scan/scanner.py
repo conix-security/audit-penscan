@@ -83,18 +83,21 @@ class Scanner():
 			if last_input == "exit":
 				break
 			elif last_input:
+				scan_id = str(uuid.uuid1())[:5]
 				m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", last_input)
 				if m:
 					if "nmap" in last_input:
 						last_input += " -n --randomize-hosts -sS"
 
 					if "nmap" in last_input and "-v" not in last_input:
-						last_input = last_input + " -v"
+						last_input += " -v"
 						
 					if "-p" not in last_input:
-						last_input = last_input + " -p" + string_ports
+						last_input += " -p" + string_ports
+
+					if "-oX" not in last_input:
+						last_input += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
 					
-					scan_id = str(uuid.uuid1())[:5]
 					print "[+] launching scan "+scan_id+ " : "+ last_input
 					child = pexpect.spawn (last_input)
 					child.setecho(True)

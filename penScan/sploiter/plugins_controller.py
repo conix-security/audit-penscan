@@ -44,10 +44,10 @@ def run(path, ip ,port, id):
 		line = p.stdout.readline()
 		line = line[:-1]
 		if line.startswith('[+]'):
-			print '\033[32m'+line #green
+			print '\033[32m'+line + '\033[0m' #green then white
 		elif line.startswith('[*]'):
 			print '\033[0m'+line #white
 		elif line.startswith('[-]'):
-			print '\033[31m'+line #red
+			print '\033[31m'+line + '\033[0m' #red then white
 		elif line.startswith('log'):
-			logger.logPluginEvent(id, ip, port, plugin_path, line[4:])
+			logger.logPluginEvent(id, ip, port, path, line[4:])

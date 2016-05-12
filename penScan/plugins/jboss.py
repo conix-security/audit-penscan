@@ -32,13 +32,13 @@ def RCE_vuln_scan(ip_addr, port):
  
 	for i in path.keys():
 		try:
-			print " * Checking %s: \t" %i
+			print "[*] Checking %s: \t" %i
 			conn = httplib.HTTPConnection(ip_addr, port)
 			conn.request("HEAD", path[i])
 			path[i] = conn.getresponse().status
 			if path[i] == 200 or path[i] == 500:
-				print "[ VULNERABLE ]"
-			else: print "[ OK ]"
+				print "[+] [ VULNERABLE ]"
+			else: print "[-] [ NOT VULNERABLE ]"
 			conn.close()
 		except:
 			print "\n * An error ocurred while connecting"

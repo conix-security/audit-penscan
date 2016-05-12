@@ -8,13 +8,13 @@ class node():
 	def __init__(self, port):
 		self.port = port
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.sock.settimeout(5)
-		
+
 #------------------------------------------------------------------------------------
 	
 	#SCAN
 	def run_scan_node(self, ip):
 		
+		self.sock.settimeout(5)
 		try:
 			self.sock.connect((ip, self.port))
 			return 1
