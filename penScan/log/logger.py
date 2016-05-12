@@ -61,8 +61,9 @@ def rcCreator(scan_id, ip, port, plugin_path, module, options=None):
 		if options:
 			for option in options:
 				commands = commands +"""
-				set """+option+"""
+				set """+option
 
+		commands = commands+"""
 		exploit"""
 
 	f.write(commands)
