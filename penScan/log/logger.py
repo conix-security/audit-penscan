@@ -58,14 +58,14 @@ def rcCreator(scan_id, ip, port, plugin_path, module, options=None):
 		set RHOSTS """+ip+"""
 		set RPORT """+port
 		
-		#OPTIONS 
-		if options:
-			for option in options:
-				commands = commands +"""
-				set """+option
+	#OPTIONS 
+	if options:
+		for option in options:
+			commands = commands +"""
+			set """+option
 
-		commands = commands+"""
-		exploit"""
+	commands = commands+"""
+	exploit"""
 
 	f.write(commands)
 	f.close()
