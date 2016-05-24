@@ -15,7 +15,7 @@ def metasploitIt(ip_addr,port):
 
 	msf = metasploit.MSFController()
 	msf.connect()
-	msf.run('auxiliary/scanner/smb/enumshares', ip_addr, port,
+	msf.run('auxiliary/scanner/smb/smb_enumshares', ip_addr, port,
 			{"MaxDepth 1",})
 	
 	

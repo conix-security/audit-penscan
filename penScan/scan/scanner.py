@@ -8,6 +8,9 @@ import pexpect
 import uuid
 from ..log import logger
 from pexpect import EOF
+import Tkinter as tk
+import curses
+import curses.textpad
 
 
 class Scanner():
@@ -16,6 +19,7 @@ class Scanner():
 		self.target_ports=[]
 		self.triggers={}
 		self.trigger_ports={}
+		self.string_ports=""
 		for plugin in plugins:
 			for port in plugin.ports:
 				if port not in self.target_ports:
@@ -35,8 +39,8 @@ class Scanner():
 	
 
 		if port in self.trigger_ports:
-			print "[+]", self.trigger_ports[port].name, "detected on", ip+":"+port
-			self.node.command_run_plugin(self.trigger_ports[port].path, str(ip), str(port))
+			print "[+] "+self.trigger_ports[port].name+" detected on "+ip+":"+port
+			self.node.command_run_plugin(self.trigger_ports[port].path, str(ip), str(port), str(scan_id))
 			return
 
 		try:
@@ -57,12 +61,56 @@ class Scanner():
 					if last_trigger != trigger:
 						if port in self.triggers[trigger].ports:
 							last_trigger = self.triggers[trigger]
-							print "[+]", last_trigger.name, "detected on", ip+":"+port
+							print "[+] "+last_trigger.name+" detected on "+ip+":"+port
 							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
 		except:  
 			return  
 	
+	def _execute_cmd(self, cmd):
+
+		m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", cmd)
+		if m:
+
+			scan_id = str(uuid.uuid1())[:5]
+			if "nmap" in cmd:
+				cmd += " -n --randomize-hosts -sS"
+
+			if "nmap" in cmd and "-v" not in cmd:
+				cmd += " -v"
+				
+			if "-p" not in cmd:
+				cmd += " -p" + self.string_ports
+
+			if "-oX" not in cmd:
+				cmd += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
+			
+			print "[+] launching scan "+scan_id+ " : "+ cmd
+			child = pexpect.spawn (cmd)
+			child.setecho(True)
+			
+			
+			while child.isalive():
+				try:
+					child.expect('Discovered',timeout=None)
+					line = child.readline().split()
+					port_to_check = "".join("".join(line[-3]).split("/")[0])
+					ip_to_check= "".join(line[-1:])
+					print "[+] Open port on", ip_to_check +":"+port_to_check
+					
+					t = threading.Thread(	target=self._trigger, 
+											args=(ip_to_check, port_to_check,scan_id))
+					threads.append(t)
+					t.start()
+
+
+				except:
+					break
+			print "[*] ----- Scan Done ----- "
+		
+		else:
+			print "\n[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
+
 	def launch(self):
 		
 		threads = []
@@ -71,55 +119,166 @@ class Scanner():
 		print "[*] if not port selected, defaults one are :"
 
 		#CREATE PORT LIST
-		string_ports =""
+		self.string_ports =""
 		for port in self.target_ports:
-			string_ports = string_ports+port+","
-		string_ports=string_ports[:-1]
-		print string_ports
+			self.string_ports = self.string_ports+port+","
+		self.string_ports=self.string_ports[:-1]
+		print self.string_ports
 		
 
-		while True:
-			last_input = raw_input ('>>>')
-			if last_input == "exit":
-				break
-			elif last_input:
-				scan_id = str(uuid.uuid1())[:5]
-				m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", last_input)
-				if m:
-					if "nmap" in last_input:
-						last_input += " -n --randomize-hosts -sS"
+		# stdscr = curses.initscr()
 
-					if "nmap" in last_input and "-v" not in last_input:
-						last_input += " -v"
-						
-					if "-p" not in last_input:
-						last_input += " -p" + string_ports
+		# #curses.noecho()
+		# #curses.echo()
 
-					if "-oX" not in last_input:
-						last_input += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
-					
-					print "[+] launching scan "+scan_id+ " : "+ last_input
-					child = pexpect.spawn (last_input)
-					child.setecho(True)
-					
-					
-					while child.isalive():
-						try:
-							child.expect('Discovered',timeout=None)
-							line = child.readline().split()
-							port_to_check = "".join("".join(line[-3]).split("/")[0])
-							ip_to_check= "".join(line[-1:])
-							print "[+] Open port on", ip_to_check +":"+port_to_check
+
+		# begin_x = 
+		# begin_y = 7
+		# height = 1
+		# width = 40
+		# win = curses.newwin(height, width, begin_y, begin_x)
+		# tb = curses.textpad.Textbox(win)
+		# text = tb.edit()
+		# curses.addstr(4,1,text.encode('utf_8'))
+
+		# hw = "Hello world!"
+		# while 1:
+		# 	c = stdscr.getch()
+		# 	if c == ord('p'): pass
+		# 	elif c == ord('q'): break # Exit the while()
+		# 	elif c == curses.KEY_HOME: x = y = 0
+
+		# curses.endwin()
+
+
+		class _Getch:
+			def __init__(self):
+				import tty, sys, termios # import termios now or else you'll get the Unix version on the Mac
+
+			def __call__(self):
+				import sys, tty, termios
+				fd = sys.stdin.fileno()
+				old_settings = termios.tcgetattr(fd)
+				try:
+					tty.setraw(sys.stdin.fileno())
+					ch = sys.stdin.read(1)
+					if ch=="\x1b":
+						ch+=sys.stdin.read(2)
+						if ch[-1:].isdigit():
+							ch+=sys.stdin.read(1)
+				finally:
+					termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+				return ch
+		
+		inkey = _Getch()
+		
+		prefix= ">>> "
+		commands=[]
+		index=0
+		pos=0
+		while (True):
+			command = ""
+			sys.stdout.write(prefix)
+			while(True):
+				k=inkey()
+				#print ord(k)
+				if len(k)==1:
+					if ord(k)==3: #Ctrl+C
+						sys.stdout.write("\n")
+						exit(0)
+					elif ord(k)==13: #Enter
+						if command:
+							commands.append(command)
+							index=len(commands)
+							self._execute_cmd(command)
+							pos=0
+						else:
+							sys.stdout.write("\n")
+						break
+					elif ord(k)==127: #BackSpace
+						if pos>0:
+							command=command[:pos-1]+command[pos:]
+							sys.stdout.write("\x1b[2K\r"+prefix+command+"\b"*(len(command)-pos+1))
+							pos-=1
+					else:
+						#sys.stdout.write(k+command[pos:]+"\b"*(len(command)-pos))
+						command=command[:pos]+k+command[pos:]
+						sys.stdout.write("\x1b[2K\r"+prefix+command+"\b"*(len(command)-pos-1))
+						pos+=1
+				elif len(k)==3:
+					if k=='\x1b[A': #Arrow UP
+						if index>0:
+							index-=1
+							command = commands[index]
+							sys.stdout.write("\x1b[2K\r"+prefix+command)
+							pos=len(command)
+					elif k=='\x1b[B': #Arrow DOWN
+						if index<len(commands)-1:
+							index+=1
+							command = commands[index]
+							sys.stdout.write("\x1b[2K\r"+prefix+command)
+							pos=len(command)
+					elif k=='\x1b[C': #Arrow RIGHT
+						if pos<len(command):
+							sys.stdout.write(command[pos])
+							pos+=1
+					elif k=='\x1b[D': #Arrow LEFT
+						if pos>0:
+							sys.stdout.write("\b")
+							pos-=1
+				elif len(k)==4:
+					if k=='\x1b[3~': #Delete
+						command=command[:pos]+command[pos+1:]
+						sys.stdout.write("\x1b[2K\r"+prefix+command+"\b"*(len(command)-pos))
+			
+		# while True:
+		# 	try:
+		# 		cmd = raw_input ('>>>')
+		# 		print cmd
+		# 		if cmd == "exit":
+		# 			break
+		# 		elif cmd:
+		# 			m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", cmd)
+		# 			if m:
+		# 				if "nmap" in cmd:
+		# 					cmd += " -n --randomize-hosts -sS"
+
+		# 				if "nmap" in cmd and "-v" not in cmd:
+		# 					cmd += " -v"
 							
-							t = threading.Thread(	target=self._trigger, 
-													args=(ip_to_check, port_to_check,scan_id))
-							threads.append(t)
-							t.start()
+		# 				if "-p" not in cmd:
+		# 					cmd += " -p" + string_ports
+
+		# 				if "-oX" not in cmd:
+		# 					cmd += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
+						
+		#				scan_id = str(uuid.uuid1())[:5]
+		# 				print "[+] launching scan "+scan_id+ " : "+ cmd
+		# 				child = pexpect.spawn (cmd)
+		# 				child.setecho(True)
+						
+						
+		# 				while child.isalive():
+		# 					try:
+		# 						child.expect('Discovered',timeout=None)
+		# 						line = child.readline().split()
+		# 						port_to_check = "".join("".join(line[-3]).split("/")[0])
+		# 						ip_to_check= "".join(line[-1:])
+		# 						print "[+] Open port on", ip_to_check +":"+port_to_check
+								
+		# 						t = threading.Thread(	target=self._trigger, 
+		# 												args=(ip_to_check, port_to_check,scan_id))
+		# 						threads.append(t)
+		# 						t.start()
 
 
-						except:
-							break
-					print "[*] ----- Scan Done ----- "
-				
-				else:
-					print "[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
+		# 					except:
+		# 						break
+		# 				print "[*] ----- Scan Done ----- "
+					
+		# 			else:
+		# 				print "[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
+
+		# 	except KeyboardInterrupt:
+		# 		# quit
+		# 		sys.exit()
