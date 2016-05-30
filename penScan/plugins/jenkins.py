@@ -95,6 +95,7 @@ def TryingCreds(ip_addr,port):
 
 				if res.status == 302 and 'loginError' not in str(res.getheaders()):
 					print "[+] Creds found ! "+user+":"+pwd
+					print "log Creds found ! "+user+":"+pwd
 
 		print "[*] Trying done."
 

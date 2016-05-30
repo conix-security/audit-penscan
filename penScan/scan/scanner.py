@@ -64,10 +64,12 @@ class Scanner():
 							print "[+] "+last_trigger.name+" detected on "+ip+":"+port
 							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
-		except:  
-			return  
+		except:
+			return
 	
 	def _execute_cmd(self, cmd):
+
+		threads = []
 
 		m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", cmd)
 		if m:
@@ -105,15 +107,15 @@ class Scanner():
 
 
 				except:
-					break
+					return
 			print "[*] ----- Scan Done ----- "
 		
 		else:
-			print "\n[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
+			print "[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
 
 	def launch(self):
 		
-		threads = []
+
 		
 		print "[*] ready to receive nmap or masscan command"
 		print "[*] if not port selected, defaults one are :"
@@ -151,11 +153,12 @@ class Scanner():
 		# curses.endwin()
 
 
+		#---------------------------CONSOLE---------------------
 		class _Getch:
 			def __init__(self):
 				import tty, sys, termios # import termios now or else you'll get the Unix version on the Mac
 
-			def __call__(self):
+			def __call__(self):	
 				import sys, tty, termios
 				fd = sys.stdin.fileno()
 				old_settings = termios.tcgetattr(fd)
@@ -187,13 +190,14 @@ class Scanner():
 						sys.stdout.write("\n")
 						exit(0)
 					elif ord(k)==13: #Enter
-						if command:
+						sys.stdout.write("\n")
+						if command=='exit' or command=='quit':
+							exit(0)
+						elif command!=' ' and command:
 							commands.append(command)
 							index=len(commands)
 							self._execute_cmd(command)
 							pos=0
-						else:
-							sys.stdout.write("\n")
 						break
 					elif ord(k)==127: #BackSpace
 						if pos>0:
@@ -230,7 +234,8 @@ class Scanner():
 					if k=='\x1b[3~': #Delete
 						command=command[:pos]+command[pos+1:]
 						sys.stdout.write("\x1b[2K\r"+prefix+command+"\b"*(len(command)-pos))
-			
+		#---------------------------//////////---------------------
+
 		# while True:
 		# 	try:
 		# 		cmd = raw_input ('>>>')
