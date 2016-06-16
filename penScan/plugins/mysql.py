@@ -6,7 +6,6 @@ ports=3306
 
 import os
 import sys
-import httplib, urllib
 import components.metasploit as metasploit
 
 def metasploitIt(ip_addr,port):

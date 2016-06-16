@@ -23,9 +23,6 @@ def main(ip_sploit=None, port_sploit=None, aType=None):
 		if (port_sploit==None):
 			port_sploit = config.getint('connection', 'port_sploit')
 
-
-		
-
 		node = connector.node(int(port_sploit))
 
 
@@ -38,7 +35,7 @@ def main(ip_sploit=None, port_sploit=None, aType=None):
 		elif aType=='split':
 
 			os.system("/usr/bin/gnome-terminal -e './start.py -t sploit -p "+str(port_sploit)+"' &")
-			time.sleep(1)
+			time.sleep(3)
 
 			if (not node.run_scan_node('localhost')):
 				print "[-] Can't connect to local splited sploit node, aborting..."

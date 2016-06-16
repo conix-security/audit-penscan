@@ -6,10 +6,7 @@ ports=8080,9990
 
 import os
 import sys
-import msfrpc
-import time
-import string
-import httplib, sys, urllib, os, time
+import httplib
 import components.metasploit as metasploit
 
 

@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 import sys
 import httplib
 import threading
@@ -8,14 +7,16 @@ import pexpect
 import uuid
 from ..log import logger
 from pexpect import EOF
-import Tkinter as tk
-import curses
-import curses.textpad
 
 
 class Scanner():
 	def __init__(self, plugins, node):
 		
+
+		#self.target_ports=[80,443,8080,3306,1433...]
+		#self.triggers{'Apache','Jboss',...}=Class_PLugin1,Class_Plugin2,...
+		#self.trigger_ports{3306,1433...}=Class_PLugin1,Class_Plugin2,...
+
 		self.target_ports=[]
 		self.triggers={}
 		self.trigger_ports={}
@@ -37,15 +38,19 @@ class Scanner():
 	
 	def _trigger(self, ip, port, scan_id):
 	
+		final_test=True
 
+		#Triggers on ports ONLY
 		if port in self.trigger_ports:
 			print "[+] "+self.trigger_ports[port].name+" detected on "+ip+":"+port
+			logger.logDiscoveryEvent(scan_id, ip, port, self.trigger_ports[port].path)
 			self.node.command_run_plugin(self.trigger_ports[port].path, str(ip), str(port), str(scan_id))
 			return
 
+		#Triggers on Keywords
 		try:
 			
-			print "[*] Grabbing banner on "+ip+":"+port
+			#print "[*] Grabbing banner on "+ip+":"+port
 			conn = httplib.HTTPConnection(ip, port, timeout=10)
 			conn.request("GET","/")
 			res = conn.getresponse()
@@ -64,6 +69,14 @@ class Scanner():
 							print "[+] "+last_trigger.name+" detected on "+ip+":"+port
 							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
+							final_test=False
+			if final_test:
+				important_header = res.getheader('server')
+				if important_header:
+					print "[*] Header 'Server: "+important_header+"' found on "+ip+":"+port
+				important_header = res.getheader('x-powered-by')
+				if important_header:
+					print "[*] Header 'x-powered-by: "+important_header+"' found on "+ip+":"+port
 		except:
 			return
 	
@@ -71,12 +84,12 @@ class Scanner():
 
 		threads = []
 
-		m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost)(?:(\/\d{1,2})|(?:\s|$))", cmd)
+		m = re.match("(nmap|masscan) (?:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|localhost|-iL .*)(?:(\/\d{1,2})|(?:\s|$))", cmd)
 		if m:
 
 			scan_id = str(uuid.uuid1())[:5]
 			if "nmap" in cmd:
-				cmd += " -n --randomize-hosts -sS"
+				cmd += " -n -sS"
 
 			if "nmap" in cmd and "-v" not in cmd:
 				cmd += " -v"
@@ -87,7 +100,7 @@ class Scanner():
 			if "-oX" not in cmd:
 				cmd += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
 			
-			print "[+] launching scan "+scan_id+ " : "+ cmd
+			print "[+] launching scan "+'\033[31m'+scan_id+'\033[0m'+ " : "+ cmd
 			child = pexpect.spawn (cmd)
 			child.setecho(True)
 			
@@ -118,7 +131,7 @@ class Scanner():
 
 		
 		print "[*] ready to receive nmap or masscan command"
-		print "[*] if not port selected, defaults one are :"
+		print "[*] if no ports selected, defaults one are :"
 
 		#CREATE PORT LIST
 		self.string_ports =""

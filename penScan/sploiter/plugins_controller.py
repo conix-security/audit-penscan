@@ -42,7 +42,7 @@ def run(path, ip ,port, id):
 	p = Popen([sys.executable, path, ip, port],stdin=PIPE,stdout=PIPE)
 	while (p.poll() == None) or (line != ''):
 		line = p.stdout.readline()
-		line = line[:-1]
+		line = line.strip()
 		#line = "\n"+line
 		if line.startswith('[+]'):
 			print '\033[32m'+line + '\033[0m' #green then white

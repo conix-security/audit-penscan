@@ -4,7 +4,7 @@ triggers=
 ports=445
 '''
 
-import os
+
 import sys
 import components.metasploit as metasploit
 

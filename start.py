@@ -10,9 +10,7 @@ def run():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "t:i:p:", ["type","ip","port"])
 	except getopt.GetoptError as err:
-		# print help information and exit:
-		print str(err)  # will print something like "option -a not recognized"
-		#display help
+		print str(err)  
 		sys.exit(2)
 	ip = None
 	port = None

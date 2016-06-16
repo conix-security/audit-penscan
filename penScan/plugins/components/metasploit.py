@@ -1,11 +1,8 @@
-import msfrpc
 import string
 import time
 import msgpack
 import httplib
-
-
-
+import os
 
 class MSFController():
 
@@ -14,6 +11,7 @@ class MSFController():
 		self.uri = "/api/"
 		self.headers = {"Content-type" : "binary/message-pack" }
 		self.token = None
+		self.console_id=""
 
 	def _call(self,meth,opts = []):
 
@@ -34,13 +32,21 @@ class MSFController():
 
   
 
-	def connect(self, host='127.0.0.1', port=55552):
+	def connect(self, host='127.0.0.1', port=55552, not_launched_once=True):
 		
-		self.client = httplib.HTTPConnection(host,port)
+		try:
+			self.client = httplib.HTTPConnection(host,port,strict=True)
+			self._login('msf','msf')
+			ress = self._call('console.create')
+			self.console_id = ress['id']
+		except:
+			print 'what'
+			if not_launched_once:
+				os.system("/usr/bin/gnome-terminal -e \"msfconsole -x 'load msgrpc Pass=msf'\" &")
+				time.sleep(40)
 
-		self._login('msf','msf')
-		ress = self._call('console.create')
-		self.console_id = ress['id']
+				self.connect(host,port,False)
+
 		
 	def run(self, module, target, port, options=None):
 		

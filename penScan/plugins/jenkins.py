@@ -9,7 +9,6 @@ import sys
 import httplib
 import re
 import urllib, json
-import requests
 import components.metasploit as metasploit
 
 

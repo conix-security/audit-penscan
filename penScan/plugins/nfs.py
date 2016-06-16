@@ -1,8 +1,9 @@
 '''
-plugin Tomcat
-triggers=Apache-Coyote
-ports=8080,80,443,8081,8000,8008,8443,8444,8880,8888,9080,19300
+plugin NFS
+triggers=
+ports=111
 '''
+
 
 import sys
 import components.metasploit as metasploit
@@ -10,11 +11,11 @@ import components.metasploit as metasploit
 def metasploitIt(ip_addr,port):
 	
 	
-	print "[*] Trying default pass on "+ ip_addr
+	print "[*] Trying NFS mounts scan on "+ ip_addr
 
 	msf = metasploit.MSFController()
 	msf.connect()
-	msf.run('auxiliary/scanner/http/tomcat_mgr_login', ip_addr, port)
+	msf.run('auxiliary/scanner/nfs/nfsmount', ip_addr, port,)
 	
 	
 
