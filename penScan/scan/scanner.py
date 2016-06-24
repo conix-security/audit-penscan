@@ -14,12 +14,12 @@ class Scanner():
 		
 
 		#self.target_ports=[80,443,8080,3306,1433...]
-		#self.triggers{'Apache','Jboss',...}=Class_PLugin1,Class_Plugin2,...
-		#self.trigger_ports{3306,1433...}=Class_PLugin1,Class_Plugin2,...
+		#self.http_triggers{'Apache','Jboss',...}=Class_PLugin1,Class_Plugin2,...
+		#self.ports_triggers{3306,1433...}=Class_PLugin1,Class_Plugin2,...
 
 		self.target_ports=[]
-		self.triggers={}
-		self.trigger_ports={}
+		self.http_triggers={}
+		self.ports_triggers={}
 		self.string_ports=""
 		for plugin in plugins:
 			for port in plugin.ports:
@@ -29,10 +29,10 @@ class Scanner():
 			if plugin.triggers[0] == '':
 				for port in plugin.ports:
 
-					self.trigger_ports[port]= plugin
+					self.ports_triggers[port]= plugin
 			else:
 				for trigger in plugin.triggers:
-					self.triggers[trigger] = plugin
+					self.http_triggers[trigger] = plugin
 
 		self.node = node
 	
@@ -41,13 +41,13 @@ class Scanner():
 		final_test=True
 
 		#Triggers on ports ONLY
-		if port in self.trigger_ports:
-			print "[+] "+self.trigger_ports[port].name+" detected on "+ip+":"+port
-			logger.logDiscoveryEvent(scan_id, ip, port, self.trigger_ports[port].path)
-			self.node.command_run_plugin(self.trigger_ports[port].path, str(ip), str(port), str(scan_id))
+		if port in self.ports_triggers:
+			print "[+] "+self.ports_triggers[port].name+" detected on "+ip+":"+port
+			logger.logDiscoveryEvent(scan_id, ip, port, self.ports_triggers[port].path)
+			self.node.command_run_plugin(self.ports_triggers[port].path, str(ip), str(port), str(scan_id))
 			return
 
-		#Triggers on Keywords
+		#Triggers on http Keywords
 		try:
 			
 			#print "[*] Grabbing banner on "+ip+":"+port
@@ -61,11 +61,11 @@ class Scanner():
 
 			last_trigger = ""
 
-			for trigger in self.triggers: 
+			for trigger in self.http_triggers: 
 				if re.search(str(trigger).lower(), body) or re.search(str(trigger).lower(), head) :
 					if last_trigger != trigger:
-						if port in self.triggers[trigger].ports:
-							last_trigger = self.triggers[trigger]
+						#if port in self.http_triggers[trigger].ports:
+							last_trigger = self.http_triggers[trigger]
 							print "[+] "+last_trigger.name+" detected on "+ip+":"+port
 							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
@@ -76,7 +76,7 @@ class Scanner():
 					print "[*] Header 'Server: "+important_header+"' found on "+ip+":"+port
 				important_header = res.getheader('x-powered-by')
 				if important_header:
-					print "[*] Header 'x-powered-by: "+important_header+"' found on "+ip+":"+port
+					print "[*] Header 'X-Powered-By: "+important_header+"' found on "+ip+":"+port
 		except:
 			return
 	
@@ -90,6 +90,9 @@ class Scanner():
 			scan_id = str(uuid.uuid1())[:5]
 			if "nmap" in cmd:
 				cmd += " -n -sS"
+
+			if "masscan" in cmd:
+				cmd += " --interactive"
 
 			if "nmap" in cmd and "-v" not in cmd:
 				cmd += " -v"
@@ -111,7 +114,7 @@ class Scanner():
 					line = child.readline().split()
 					port_to_check = "".join("".join(line[-3]).split("/")[0])
 					ip_to_check= "".join(line[-1:])
-					print "[+] Open port on", ip_to_check +":"+port_to_check
+					print "[+] Open port "+port_to_check+" on "+ ip_to_check
 					
 					t = threading.Thread(	target=self._trigger, 
 											args=(ip_to_check, port_to_check,scan_id))
@@ -189,12 +192,14 @@ class Scanner():
 		inkey = _Getch()
 		
 		prefix= ">>> "
-		commands=[]
+		commands=[""]
 		index=0
 		pos=0
 		while (True):
-			command = ""
+			command=""
 			sys.stdout.write(prefix)
+			index=len(commands)-1
+			print index
 			while(True):
 				k=inkey()
 				#print ord(k)
@@ -204,11 +209,14 @@ class Scanner():
 						exit(0)
 					elif ord(k)==13: #Enter
 						sys.stdout.write("\n")
+						command=command.lstrip()
 						if command=='exit' or command=='quit':
 							exit(0)
 						elif command!=' ' and command:
-							commands.append(command)
-							index=len(commands)
+							index=len(commands)-1
+							commands[index]=command
+							commands.append("")
+							
 							self._execute_cmd(command)
 							pos=0
 						break
@@ -225,12 +233,14 @@ class Scanner():
 				elif len(k)==3:
 					if k=='\x1b[A': #Arrow UP
 						if index>0:
+							commands[index]=command
 							index-=1
 							command = commands[index]
 							sys.stdout.write("\x1b[2K\r"+prefix+command)
 							pos=len(command)
 					elif k=='\x1b[B': #Arrow DOWN
 						if index<len(commands)-1:
+							commands[index]=command
 							index+=1
 							command = commands[index]
 							sys.stdout.write("\x1b[2K\r"+prefix+command)

@@ -28,6 +28,7 @@ class node():
 			sent = self.sock.send(msg)
 		except:
 			print "[-] Error while sending command RUN"
+
 	#SCAN
 	def command_get_plugins(self):
 		msg = "GET PLUGINS"
@@ -67,24 +68,36 @@ class node():
 			data = conn.recv(1024)
 			if data:
 				keywords = data.split()
-				print keywords
-				first_word = str(keywords[0])
+				while keywords:
+					print keywords
+					first_word = str(keywords[0])
 
-				if  str(keywords[0]) == 'RUN':
+					if  str(keywords[0]) == 'RUN':
 
-					t = threading.Thread(	target=self.pController.run, 	
-											args=(	str(keywords[1]), 
-													str(keywords[2]), 
-													str(keywords[3]),
-													str(keywords[4]))
-										)
-					t.start()
+						#Overlapping command bug fix
+						if str(keywords[4]).endswith('RUN'):
+							keywords[4]=str(keywords[4])[:-3]
 
-				elif str(keywords[0]) == 'GET':
+						t = threading.Thread(	target=self.pController.run, 	
+												args=(	str(keywords[1]), 
+														str(keywords[2]), 
+														str(keywords[3]),
+														str(keywords[4]))
+											)
+						t.start()
 
-					plugins = self.pController.get_plugins()
-					str_plugins = pickle.dumps(plugins)
-					conn.send(str_plugins)
+
+						#Overlapping command bug fix
+						if len(keywords)>5:
+							keywords=keywords[0:1]+keywords[5:]
+						else:
+							keywords=[]
+					elif str(keywords[0]) == 'GET':
+
+						plugins = self.pController.get_plugins()
+						str_plugins = pickle.dumps(plugins)
+						conn.send(str_plugins)
+						keywords=[]
 			else:
 				conn.shutdown(2)
 				conn.close()

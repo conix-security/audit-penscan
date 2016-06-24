@@ -31,6 +31,7 @@ def tryingCreds(ip_addr,port):
 				ftp = ftplib.FTP(ip_addr)
 				ftp.login(user, pwd)
 				print "[+] Creds found ! "+user+":"+pwd
+				print "log Creds found ! "+user+":"+pwd
 				ftp.quit()
 			except:
 				pass

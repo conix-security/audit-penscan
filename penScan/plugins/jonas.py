@@ -7,7 +7,6 @@ ports=9000
 import os
 import sys
 import httplib, urllib
-import components.metasploit as metasploit
 
 
 def tryingCreds(ip_addr,port):
