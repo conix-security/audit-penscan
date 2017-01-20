@@ -39,6 +39,11 @@ class node():
 		except:
 			print "[-] Error while sending command GET"
 
+	def receive_feedback(self):
+		print "---------------------------------------------------------------"
+		print "Results :"
+		print self.sock.recv(10000)
+
 #------------------------------------------------------------------------------------
 
 	#SPLOIT
@@ -82,7 +87,8 @@ class node():
 												args=(	str(keywords[1]), 
 														str(keywords[2]), 
 														str(keywords[3]),
-														str(keywords[4]))
+														str(keywords[4]),
+														conn)
 											)
 						t.start()
 
@@ -92,6 +98,7 @@ class node():
 							keywords=keywords[0:1]+keywords[5:]
 						else:
 							keywords=[]
+							
 					elif str(keywords[0]) == 'GET':
 
 						plugins = self.pController.get_plugins()

@@ -40,7 +40,6 @@ class MSFController():
 			ress = self._call('console.create')
 			self.console_id = ress['id']
 		except:
-			print 'what'
 			if not_launched_once:
 				os.system("/usr/bin/gnome-terminal -e \"msfconsole -x 'load msgrpc Pass=msf'\" &")
 				time.sleep(40)

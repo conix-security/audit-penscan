@@ -2,12 +2,12 @@
 import time
 import os
 
-def _getDirScan(scan_id):
+def getDirScan(scan_id):
 
 	date = time.strftime("%d-%m")
 	pwd = os.path.dirname((os.path.realpath(__file__)))
 
-	nPath = pwd+"/"+date+"_"+scan_id
+	nPath = pwd+"/"+date+"/"+scan_id
 	if not os.path.exists(nPath):
 		os.makedirs(nPath)
 
@@ -15,7 +15,7 @@ def _getDirScan(scan_id):
 
 def _followThePath(scan_id, ip, port, plugin_path):
 
-	nPath = _getDirScan(scan_id)
+	nPath = getDirScan(scan_id)
 
 	plugin_name = os.path.basename(os.path.splitext(plugin_path)[0])
 
@@ -31,7 +31,7 @@ def logPluginEvent(scan_id, ip, port, plugin_path, event):
 
 	nPath += "/"+plugin_name+"_"+port+".log"
 
-	f = open(nPath, "w+")
+	f = open(nPath, "a+")
 	f.write(event+"\n")
 	f.close()
 

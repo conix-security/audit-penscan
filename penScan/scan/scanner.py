@@ -42,7 +42,7 @@ class Scanner():
 
 		#Triggers on ports ONLY
 		if port in self.ports_triggers:
-			print "[+] "+self.ports_triggers[port].name+" detected on "+ip+":"+port
+			print "\033[32m[+] "+self.ports_triggers[port].name+" detected on "+ip+":"+port+'\033[0m'
 			logger.logDiscoveryEvent(scan_id, ip, port, self.ports_triggers[port].path)
 			self.node.command_run_plugin(self.ports_triggers[port].path, str(ip), str(port), str(scan_id))
 			return
@@ -66,7 +66,7 @@ class Scanner():
 					if last_trigger != trigger:
 						#if port in self.http_triggers[trigger].ports:
 							last_trigger = self.http_triggers[trigger]
-							print "[+] "+last_trigger.name+" detected on "+ip+":"+port
+							print "\033[32m[+] "+last_trigger.name+" detected on "+ip+":"+port+'\033[0m'
 							logger.logDiscoveryEvent(scan_id, ip, port, last_trigger.path)
 							self.node.command_run_plugin(last_trigger.path, str(ip), str(port), str(scan_id))
 							final_test=False
@@ -101,13 +101,12 @@ class Scanner():
 				cmd += " -p" + self.string_ports
 
 			if "-oX" not in cmd:
-				cmd += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
+				cmd += " -oX "+logger.getDirScan(scan_id)+"/output.xml"
 			
 			print "[+] launching scan "+'\033[31m'+scan_id+'\033[0m'+ " : "+ cmd
 			child = pexpect.spawn (cmd)
 			child.setecho(True)
-			
-			
+
 			while child.isalive():
 				try:
 					child.expect('Discovered',timeout=None)
@@ -117,15 +116,20 @@ class Scanner():
 					print "[+] Open port "+port_to_check+" on "+ ip_to_check
 					
 					t = threading.Thread(	target=self._trigger, 
-											args=(ip_to_check, port_to_check,scan_id))
+											args=(ip_to_check, port_to_check, scan_id))
 					threads.append(t)
 					t.start()
 
 
-				except:
-					return
+				except Exception as e:
+					pass
+
 			print "[*] ----- Scan Done ----- "
-		
+			try:
+				self.node.receive_feedback()
+			except:
+				pass
+
 		else:
 			print "[-] invalid command, format is \"nmap/masscan {ip} {parameters}\""
 
@@ -134,7 +138,7 @@ class Scanner():
 
 		
 		print "[*] ready to receive nmap or masscan command"
-		print "[*] if no ports selected, defaults one are :"
+		print "[*] if no ports selected, defaults are :"
 
 		#CREATE PORT LIST
 		self.string_ports =""
@@ -199,7 +203,6 @@ class Scanner():
 			command=""
 			sys.stdout.write(prefix)
 			index=len(commands)-1
-			print index
 			while(True):
 				k=inkey()
 				#print ord(k)
@@ -278,7 +281,7 @@ class Scanner():
 		# 					cmd += " -p" + string_ports
 
 		# 				if "-oX" not in cmd:
-		# 					cmd += " -oX "+logger._getDirScan(scan_id)+"/output.xml"
+		# 					cmd += " -oX "+logger.getDirScan(scan_id)+"/output.xml"
 						
 		#				scan_id = str(uuid.uuid1())[:5]
 		# 				print "[+] launching scan "+scan_id+ " : "+ cmd

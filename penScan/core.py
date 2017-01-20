@@ -56,7 +56,7 @@ def main(ip_sploit=None, port_sploit=None, aType=None):
 		if plugins:
 			print "[*] List of plugins loaded :"
 			for plugin in plugins:
-				print "[ ] " + plugin.path
+				print "[ ] " + plugin.name
 		else:
 			print "[-] No plugins loaded"
 			exit(0)

@@ -17,9 +17,6 @@ def tryingCreds(ip_addr,port):
 	f_users = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/users", 'r')
 	f_passwds = open(os.path.dirname(os.path.realpath(__file__))+ "/wordlists/pass", 'r')
 
-	#Bruteforce firewall is enable by default on WebLogic admin console
-
-	# For test WebLogic:WebLogic1
 	users = f_users.read()
 	passwds = f_passwds.read()
 
